@@ -1,0 +1,308 @@
+Rancher Installations:
+$ Install docker
+$ sudo docker run --privileged -d --restart=unless-stopped -p 80:80 -p 443:443 rancher/rancher
+
+Inginx ingress installations:
+https://github.com/LandmakTechnology/k8s-ingress/blob/main/README.md
+
+LoadBalancers   :
+  Network LoadBalancers 
+     PROVIDE Layer 4 support
+       layer = Transport
+    10 applications  = 10 Network LoadBalancers
+  Application LoadBalancers
+     Provide layer7 support 
+        Lasyer 7 is the Application Layer
+    10 applications  = 1 LoadBalancer
+Vendors:
+  Nginx Ingress   
+  HaProxy
+
+Application running on  our infrastructures      
+    Application can be designed
+        Monolithic --> 3 Legacy Monolithic applications
+        Microservices --> 7 Microservices applications
+                          microservices is 10*7 = 70 
+Host-based routing 
+ ideal for multiple applications
+   springapp.tekglobal.io
+   td.tekglobal.io
+   java.tekglobal.io
+
+Path-based routing
+ ideal for microservices
+ springapp.tekglobal.io/login 
+ springapp.tekglobal.io/registration
+ springapp.tekglobal.io/account
+ springapp.tekglobal.io/transfer
+ springapp.tekglobal.io/payBills
+    login
+    registration 
+    create account
+    transfer 
+    payBills
+       scaling
+       security 
+       speed
+       coding 
+       light weight 
+       total failure 
+       poor use of resources
+How can we achieve the transition to microservices??
+   Change request 
+   train other colleague 
+
+Infrastructures            :
+        Containerised  
+        Physical servers or VM
+K8S:   
+    ClusterIP
+    NodePort
+    LoadBalancers
+         Nginx Ingress   
+         HaProxy
+
+Generally 2 classes of k8s:
+        Self Managed
+            Minikube  - 1node 
+            kubeadm  - 5M,  21W
+        Managed
+            EKS
+            GKE
+            AKS
+            IKS
+         storage, ASG, LC, ELB  
+         
+Kops is a software used to install production ready k8s cluster IN ANY CLOUD.
+        Application LoadBalancer  = Layer 7 support
+           HTTP/HTTPS 
+           
+        Network LoadBalancer  = Layer 4 support
+           TCP/TLS/UDP
+
+Nginx Ingress Controller             (Community & From Nginx Inc) 
+Traefik
+HAproxy  Contour
+GKE Ingress Controller
+
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-resource-1
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: springapp.tekglobal.io
+    http:
+      paths:
+     =  Default Backend (Root /)
+      - backend:
+          serviceName: springapp 
+          servicePort: 80
+  - host: javaapp.tekglobal.io
+    http:
+      paths: /java-web-app
+      # Default Backend (Root /)
+      - backend:
+          serviceName: javawebapp
+          servicePort: 80
+
+# Install java-web-app with ClusterIP service
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    name: javawebapp
+  name: java-controller
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        name: javawebapp
+    spec:
+      containers:
+      - image: mylandmarktech/jbapp:3
+        name: javawebapp
+        ports:
+        - name: javawebapp
+          containerPort: 8080  
+---
+# ClusterIP Service
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: javawebapp
+  name: javawebapp
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+      #nodePort: 32500
+  selector:
+    name: javawebapp
+---	
+#2
+# Complete Manifest file Where in single yml we defined Deployment & Service for SpringApp & PVC(with default  StorageClass),ReplicaSet & Service For Mongo.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springappdeployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: springapp
+  template:
+    metadata:
+      name: springapppod
+      labels:
+        app: springapp
+    spec:
+      containers:
+      - name: springappcontainer
+        image: mylandmarktech/spring-boot-mongo
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MONGO_DB_USERNAME
+          value: devdb
+        - name: MONGO_DB_PASSWORD
+          value: devdb@123
+        - name: MONGO_DB_HOSTNAME
+          value: mongo 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: springapp
+spec:
+  selector:
+    app: springapp
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodbpvc 
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: mongodbrs
+spec:
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+     metadata:
+       name: mongodbpod
+       labels:
+         app: mongodb
+     spec:
+       volumes:
+       - name: pvc
+         persistentVolumeClaim:
+           claimName: mongodbpvc     
+       containers:
+       - name: mongodbcontainer
+         image: mongo
+         ports:
+         - containerPort: 27017
+         env:
+         - name: MONGO_INITDB_ROOT_USERNAME
+           value: devdb
+         - name: MONGO_INITDB_ROOT_PASSWORD
+           value: devdb@123
+         volumeMounts:
+         - name: pvc
+           mountPath: /data/db   
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+spec:
+  type: ClusterIP
+  selector:
+    app: mongodb
+  ports:
+  - port: 27017
+    targetPort: 27017
+
+# Deploy Nginx-ingress with Path Based routing
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-resource-1
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: springapp.landmarkteck.net
+    http:
+      paths:
+      # Default Path(/)
+      - backend:
+          serviceName: springapp
+          servicePort: 80
+      - path: /myapps
+        backend:
+          serviceName: javawebapp
+          servicePort: 80
+
+Use Path based routing for applications with multiple microservices
+  landmark.com/ #home
+        /login
+        /registration
+        /payment
+  
+Use Host based routing for multiple applications  
+
+
+HAPROXY
+# Setup HaProxy LB in Ubuntu
+
+$ sudo apt-get update && sudo apt-get upgrade
+
+$ sudo apt-get install haproxy
+
+#  Setup HaProxy LB in Redhat
+$ sudo yum update -y 
+$ sudo yum install haproxy -y
+
+# Add Proxy Details in haproxy.cfg file
+
+$ sudo vi /etc/haproxy/haproxy.cfg
+frontend haproxynode
+    bind *:80
+    mode http
+    default_backend backendServers
+
+backend backendServers
+    balance roundrobin
+    option forwardfor
+    http-request set-header X-Forwarded-Port %[dst_port]
+    http-request add-header X-Forwarded-Proto https if { ssl_fc }
+    option httpchk HEAD / HTTP/1.1\r\nHost:localhost
+    server node1 172.31.24.216:32500 check
+    server node2 172.31.31.175:32500 check
+    #server node2 <IP>:<PORT> check
+
+$ sudo service haproxy restart
+
+
+ip-172-31-24-216 
+ip-172-31-29-91
+ip-172-31-31-175

@@ -1,0 +1,717 @@
+git-->Maven-->Tomcat(VM) 
+  multiple environments 
+  dev /staging / testing /uat-preprod/ prod
+
+Migration from Virtualisation to Containerization  
+    Docker and Kubernetes
+kubernetes = k8s 
+Containerization --> Docker, Rocket(Rkt)
+Container Orchestration Tools --> 
+    Docker Swarm, Kubernetes, OpenShift
+
+kubectl create deployment -f app.yml
+helm install myapp 
+docker ps 
+
+Installation
+============
+
+Self Managed K8s Cluster
+ minikube --> Single Node K8's Cluster.
+ kubeadm -->  We can setup multi node k8s cluster using kubeadm.
+
+Cloud Managed(Managed Services)
+EKS --> Elastic Kubernetes Service(AWS)
+   https://github.com/LandmakTechnology/terraform-eks
+AKS --> Azure Kubernetes Service(Azure)
+GKE --> Google Kubernetes Engine(GCP)
+IKS 
+
+Configure Amazon EKS using terraform 
+  sudo adduser eksadmin 
+  sudo echo "eksadmin  ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/eks
+
+
+
+KOPS --> Is a Kubernetes Operations software use to create production ready
+highly available kubenetes services in Cloud like AWS, AZURE, GCP.
+
+What is considered as a production ready k8s?
+
+NameSpaces
+
+kubectl get namespaces ns
+
+kubectl create namespace <nameSpaceName>
+
+we can use name spaces for; isolation, security, rbac, 
+assign resources - 1GB RAM
+# customer support
+# customers service 
+# Dev   prod     uat
+
+http: 80
+https: 443
+
+with name spaces we deploy multiple apps in seperate namespace - 
+ 13 apps                      end-user, customers service.
+
+
+INT1                             NameSpace1
+              Single k8s cluster
+INT2 
+                            NameSpace2
+Kubernetes Objects:
+POD
+  K8S-->Nodes-->Pods-->Containers
+  1 instance of the apps
+Replication Controller
+ReplicaSet
+DaemonSet
+StatefulSets
+Deployment
+Horizontal Pod Autoscaler - HPA 
+Vertical Pod Autoscaler - VPA
+ClusterAutoScalar
+Service Discovery:
+  ClusterIP
+  NodePort 
+  LoadBalancer 
+  External Name 
+  Ingress
+Security - DevSecOps :
+  service Account
+  rbac
+  roles & role Binding
+  cluster Roles & Cluster Role Binding
+  kube/config 
+Volume
+
+Pods
+SingleContainerPods = 99%
+Most of the time we will go with SingleContainerPods
+ 
+
+
+MultiContainerPods = 1% 
+  Pod:
+    appsContainer    
+    name: SpringApp
+    logContainer
+    name: Splunk_ELK_EFK
+    proxyContainer
+    name: haproxy
+Scaling: 
+  1--> 20
+
+ imperative  = commands
+   commands 
+   docker run 
+ declarative  = Manifest Files
+
+ Deploy Sample Application
+==========================
+
+kubectl run my-first-pod --image mylandmarktech/hello
+
+kubectl run nginx-demo --image=nginx --port=80 
+
+kubectl expose deployment nginx-demo --port=80 --type=NodePort
+ 
+ kubectl expose pod my-first-pod  --type=NodePort --port=80 --name=my-first-service
+   http://<node1-public-ip>:<Node-Port>
+
+kubectl logs, describe, exec 
+   =# Connect to Nginx Container in a POD
+kubectl exec -it <pod-name> -- /bin/bash
+kubectl exec -it my-first-pod -- /bin/bash
+  kubectl exec -it <pod-name> env
+
+=# Sample Commands
+kubectl exec -it my-first-pod env
+kubectl exec -it my-first-pod ls
+kubectl exec -it my-first-pod cat /usr/share/nginx/html/index.html
+
+ 5 requests  to 5 million requests
+    replicas: 10000 (10,000)  
+
+kubectl get all 
+kubectl get pods 
+kubectl get pods --show-labels
+kubectl get pods - o wide
+kubectl get pods - o wide --show-labels
+kubectl  describe pod <podName>
+kubectl  describe pod <podName> -n <namespace>
+
+ Kubernetes manifest files are written in YAML / YML or JSON
+
+For each kubernetes objects there is a corresponding apiVersion
+YAML Basics:
+YAML is used to store information about different things
+We can use YAML  to define key, Value pairs like:
+ strings, variables, lists and objects
+YAML is very similar to JSON (Javascript Object Notation)
+YAML primarily focuses on readability and user friendliness
+YAML is designed to be clean and easy to read
+We can define YAML files with two different extensions
+abc.yml
+abc.yaml
+
+kind: Pod  # string 
+apiVersion:
+metadata:
+spec:
+
+
+
+YAML Comments
+variables 
+strings
+YAML Key Value Pairs
+YAML Dictionary or Map
+YAML Array / Lists
+YAML Spaces
+YAML Document Separator
+IDE = VS CODE
+
+Node 
+  10GB DISK 
+  Memory  1GB
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.3.1/aio/deploy/recommended.yaml
+
+ kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-course-admin | awk '{print $1})'
+
+# Pod Manifest
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: <PodName>
+  namespace: <nameSpaceName>
+  labels:
+    <key>: <value>
+spec:
+  containers:
+  - name: <NameOfTheCotnainer>
+    image: <imagaName>
+	ports:
+	- containerPort: <portOfContainer>
+eg
+1. Pod manifest file in yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp
+  labels:
+    app: webapp
+spec:
+  containers:
+  - name: webappcontainer
+    image: mylandmarktech/hello
+    ports:
+    - containerPort: 80
+= kubectl apply -f manifests/
+#2. Example: yaml or yml format
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+  labels:
+    app:  myapp
+spec:
+  containers:
+  - name: myappcontainer
+    image: mylandmarktech/java-web-app
+    ports:
+    - containerPort: 8080
+
+IQ: Can we use Json format to write a k8s manifest file? YES. However we use yml most of the time..
+	
+1. Example: Json (JavaScript object notation) format
+{
+
+}"apiVersion": "v1",
+"kind": "Pod",
+"metadata": {
+   "name": "myapp",
+   "labels": {
+   "app": "myapp"
+   }
+}
+"spec": {
+  "containers": 
+  [
+  {
+  "name": "myappcontainer",
+  "image": "mylandmarktech/java-web-app",
+  "ports": [
+  {
+  "containerPort": "8080"
+  }
+  ]
+  }
+  ]
+}
+
+kubectl apply -f <fileName.yml>
+kubectl get all 
+kubectl get pods 
+kubectl get pods --show-labels
+kubectl get pods - o wide
+kubectl get pods - o wide --show-labels
+kubectl  describe pod <podName>
+kubectl  describe pod <podName> -n <namespace>
+
+# Multi Container POD
+apiVersion: v1
+kind: Pod
+metadata:
+  name:  <PODName>
+  namespace: <nameSpaceName>
+  labels:
+    <labelKey>: <labelValue> 
+spec:
+  containers:
+  - name: <nameOftheCotnainer>
+    image: <imageName>
+	ports:
+	- containerPort: <portNumberOfContainer>
+  - name: <nameOftheCotnainer>
+    image: <imageName>
+    ports:
+    - containerPort: <portNumberOfContainer>	
+
+k8s Service
+ClusterIP
+NodePort
+LoadBalancer
+	
+# labels are key valuepairs which we can attach to any k8 object
+Service
+========
+apiVersion: v1
+kind: Service
+metadata:
+  name: <serviceName>
+  namespace: <nameSpace>
+spec:
+  type: <ClusterIP/NodePort>
+  selector:
+     <key>: <value>
+  ports:
+  - port: <servciePort>	# default It to 80
+    targetPort: <containerPort> 
+
+Within Cluster k8s uses ClusterIP
+=================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: webappsvc
+spec:
+  type: ClusterIP
+  selector:
+    app: webapp
+  ports:
+  - port: 80
+    targetPort: 80
+
+k8s communications outside the Cluster uses NodePort
+====================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: webappsvc1
+spec:
+  type: NodePort # 30000 32676
+  selector:
+    app: webapp
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30300
+====
+apiVersion: v1
+kind: Service
+metadata:
+  name: javawebappservice
+spec:
+  type: NodePort
+  selector:
+    app: myapp
+  ports:
+  - port: 80
+    targetPort: 8080
+	nodePort: 30033 # This Optional if u don't mention nodePort.Kuberetes will assign.
+
+ 
+	
+kubectl get endpoints
+kubectl apply -f <file.yml>
+
+kubectl get svc 
+kubectl get all
+
+kubectl  describe service <serviceName>
+kubectl  describe service <serviceName> -n <namespace>
+kubectl  describe service <serviceName> -o wide
+
+
+What is node port range?
+30000-32767
+
+kubectl get all --all-namespaces
+kubectl get all -n <namespace>
+kubectl get pods -n <namespace>
+kubectl get pods -n <namespace> - o wide
+
+kubectl get svc -n <namespace>
+
+kubectl exec -i -t myapp1 bash
+
+Note: If we don't mention -n <namespace> it will refer default namespace.
+If required we can change namespace context.	
+
+
+=# ReplicationController
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: <RRName>
+  labels: # Labels for RR
+    <key>: <value>
+spec:
+  replicas: <NoOfPodReplicas> 5
+  selector: # ReplicationController will fine pod based on the below key and value
+    <key>: <value>
+	
+  template:
+    metadata: #Pod metadata
+	  name: <PodName>
+	  labels: # Pod labels
+	    <key>: <value>
+	spec:
+	  containers:
+	  - name: <containerName>
+	    image: <imagaName>
+		ports:
+		- containerPort: <containerPort>
+
+
+
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: webapprc
+  labels:
+    app: webapp
+spec:
+  replicas: 3
+  selector:
+    app: webapp
+  template:
+    metadata:
+      name: webappod  
+      labels:
+        app: webapp
+    spec:
+      containers:
+      - name: webappcontainer
+        image: mylandmarktech/hello:4
+        ports:
+        - containerPort: 80
+	        containers:
+
+IQ: What is the difference b/w docker svc and k8s svc?
+In Docker Swarm service manages the containers. we can access containers using serviceName in Docker . 
+in k8s service is not creating/managing the pod. controllers manages the communications
+Docker manages the pods 
+
+ReplicaSet:
+
+What is difference b/w replicaset and replication controller?
+
+ReplicaSet is the next generation of replication controller. 
+Both manages the pod replicas. 
+ The only difference as at now is selector support.
+
+RC --> Supports only equality based selectors.
+
+key == value(Equal Condition)
+selector:
+    app: webapp
+
+RS --> Supports eqaulity based selectors and 
+       also supports  set based selectors.
+
+key == value(Equal Condition)
+
+Set Based
+key in (value1,value2, value3)
+key in (value1) 
+
+selector:
+   matchLabels: = Equality Based
+     key: value
+   matchExpressions: = Set Based
+   - key: app
+     operator: IN
+	 values:
+	 - webapp
+	 - webapplication
+	 - webs
+	 
+# Mainfest File for RS
+
+Kubernetes concepts
+  Secrets
+  Init Containers
+  Liveness & Readiness Probes
+  Resources: Requests & Limits
+
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: <RSName>
+spec:
+  replicas: <noOfPODReplicas>
+  selector:  # To Match POD Labels.
+    matchLabels:  # Equality Based Selector
+	  <key>: <value>
+    matchExpressions:  # Set Based Selector 
+	- key: <key>
+	  operator: <in/not in>
+	  values:
+	  - <value1>
+	  - <value2>
+  template:
+    metadata:
+	  name: <PODName>
+	  labels:
+	    <key>: <value>
+	spec:
+	- containers:
+	  - name: <nameOfTheContainer>
+	    image: <imageName>
+		ports:
+		- containerPort: <containerPort>
+
+Example:
+# example 
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: mavenapprs
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mavenapp
+  template:
+    metadata:
+      name: mavenapppod
+      labels:
+        app: mavenapp
+    spec:
+      containers:
+      - name: mavenappcontainer
+        image: legah2045/maven-web-app
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mavenappsvc
+spec:
+  type: NodePort
+  selector:
+    app: mavenapp
+  ports:
+  - port: 8080
+    targetPort: 8080
+	nodePort: 31000 # 30000 - 32676
+
+
+
+kubectl get rs 
+kubectl get rs -n <namespace>
+kubectl get all
+kubectl scale rs <rsName> --replicas <noOfReplicas>
+
+kubectl describe rs <rsName>
+kubectl delete rs <rsName>
+
+What is difference b/w kubectl create and kubectl apply?
+
+Create will Create an Object if it's not already created. 
+Apply will perform create if object is not created earlier.If it's already created apply will update.
+
+= DaemonSet vs ReplicaSet vs ReplicationController 
+k8s = 18 worker nodes 
+      52  not possible 
+
+Docker Swarm = 
+    Global   == DaemonSet 
+    Replicas == Deployment | 
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: <DSName>
+spec:
+  #replicas: 18
+  selector:  # To Match POD Labels.
+    matchLabels:  # Equality Based Selector
+	  <key>: <value>
+    matchExpressions:  # Set Based Selector 
+	- key: <key>
+	  operator: <in/not in>
+	  values:
+	  - <value1>
+	  - <value2>
+  template:
+    metadata:
+	  name: <PODName>
+	  labels:
+	    <key>: <value>
+	spec:
+	- containers:
+	  - name: <nameOfTheContainer>
+	    image: <imageName>
+		ports:
+		- containerPort: <containerPort>
+
+=# splunk  or ELK OR KubeProxy // network plugin -  weave
+= ElasticSearch, FileBeat, Kibana 
+= FileBeat is a log shipper
+= k8s = 18 worker nodes  
+apiVersion: apps/v1
+kind: DaemonSet
+metadata: 
+  name: webappds
+spec: 
+  selector: 
+    matchLabels: 
+      app: webapp
+  template: 
+    metadata: 
+	  name: webapppod
+      labels: 
+        app: webapp
+    spec:
+      containers:
+      - name: webappcontainer
+        image: tutum/hello-world
+        ports:
+        - containerPort: 80
+
+StatefulSets:
+  ElasticSearch
+  mongodb
+
+
+kubectl get ds 
+kubectl get ds -n <namespace>
+kubectl get all
+
+
+kubectl describe ds <dsName>
+kubectl delete ds <dsName>
+		
+		
+what is difference b/w kubectl apply & kubectl create
+
+kubectl apply (create & update)
+
+kubectl create -f <fileName.yml>
+
+kubectl update -f <fileName.yml>
+
+
+# Deployment ReCreate
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mavenappdeployment
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: mavenapp
+  strategy:
+    type: Recreate    
+  template:
+    metadata:
+      name: mavenapppod
+      labels:
+        app: mavenapp
+    spec:
+      containers:
+      - name: mavenappcontainer
+        image: legah2045/maven-web-app
+        ports:
+        - containerPort: 8080
+#Deployment RollingUpdate
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mavenappdeployment
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: mavenapp
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+    minReadySeconds: 30
+  template:
+    metadata:
+      name: mavenapppod
+      labels:
+        app: mavenapp
+    spec:
+      containers:
+      - name: mavenappcontainer
+        image: mylandmarktech/maven-web-app:1
+        ports:
+        - containerPort: 8080
+
+kubectl get deployment
+kubectl get rs
+kubectl get pods
+kubectl rollout status deployment <deploymentName>
+kubectl rollout history  deployment mavenappdeployment <deploymentName>
+kubectl rollout history  deployment <deploymentName> --revision 1  
+kubectl rollout undo  deployment <deploymentName> --to-revision 1  
+kubectl scale deployment <deploymentName> --replicas <noOfReplicas>
+
+kubectl rollout undo  deployment mydeploy --to-revision 1
+	
+# Update Deployment Image using command	
+
+kubectl set image deployment <deploymentName> <containerName>=<imageNameWithVersion> --record 
+
+Volumes:
+
+Kubernetes Supports different types of volumes.
+
+hostPath
+nfs
+
+awsElasticBlockStore
+googlePersistantdisk
+azureFile
+azuredisk
+
+persistantVolume
+persistantVolumeClaim
+
+What is the difference between ports and POD?
+pod 
+ports
+ 80, 443, 8080  

@@ -1,0 +1,160 @@
+https://github.com/LandmakTechnology/kubernetes-notes/tree/master/13-kubernetes-ingress
+
+kubernetes  - more tips
+docker for Containerization:
+    networking - docker does not support multi hosting  
+docker-swarm :
+  container mgt (Orchestration)
+    OVERLAY network 
+Kubernetes    :
+  container mgt (Orchestration)
+     weave, flannel 
+How do we deploy application in a k8s? :
+  declarative:  
+    using kubernetes-manifests files (yaml) 
+    kubectl apply/create  
+  imperative 
+     kubectl run/ :
+     kubectl expose 
+We use deployment, StatefulSets, Pods, RC, RS, SS, DS,  
+
+k8s Service Discovery? 
+Service in k8s act as LoadBalancers 
+type:
+   ClusterIP = backend apps (4 replicas)
+     springapp     = 
+     springappsvc  = 
+      --> springappsvc --> springapp  
+   NodePort  = frontend 
+   LoadBalancer = kops, EKS (ELB)
+     Route traffic using an internal algorithm (round robbing)
+     Balance the load 
+     security - avoid sql injections
+     performs health checks 
+   ExternalName
+
+Ingress:
+     prvides  layer7 LoadBalancers
+     I provide Layer 7 support 
+
+ helm  :
+  helm install myapp 
+  helm upgrade myapp 
+
+Linux server :
+  wget = download the software or package
+  unzip / tar -xvf 
+  yum install helm tree vim   = 
+  apt install helm 
+
+ConfigMaps  / 
+secrets  
+
+Application performance:
+Container Insights -
+ Log Insights in depth
+    Log Groups
+    Log Insights
+    Create Dashboard
+    Create Graph for Avg Node CPU Utlization
+
+EFK: Elastic STACK log mgt 
+    
+   ElasticSearch 
+      StatefulSets
+   FileBeat - log collector
+      DaemonSet
+   kibana 
+      deployment
+
+Application performance in K8S:
+  Container Restarts
+  Cluster Node Failures
+  CPU Usage By Container
+  Pods Requested vs Pods Running
+  Application log errors by container name
+  Latency
+  requests count  
+
+ prometheus:
+   prometheus server 
+     TSDB
+     rules:
+       - nodeDown
+       - lowMemory
+       - Latency 
+       - PodsRequested vs PodsRunning
+   AlertsManager
+       - email notification
+       - slack channel
+   Node Exporters
+     LOGS 
+   kube-state-metrics
+    -  
+
+AlertsManager will be triggered via:
+  email notification
+  slack channel
+Container Insights - CloudWatch Alarms:
+
+Secrets and ConfigMaps
+Requests and Limits
+  k8s-->node (1,2,3)-->pod 
+Init Containers 
+  CMD []
+  docker run 
+  kubectl run 
+  kubectl apply 
+NameSpaces
+
+Probes:
+ Liveness Probe
+ Kubelet uses liveness probes to know 
+ when to restart a container in deadlock
+
+ Readiness Probe
+ Kubelet uses readiness probes to know 
+ when a container is ready to accept traffic
+ 
+
+ Startup Probe
+ Kubelet uses startup probes to know 
+ when a container application has started
+  good for slow starting containers 
+  avoiding them getting killed by the kubelet 
+   before they are up and running.
+
+
+
+
+
+
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-resource-1
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: springapp.tekglobal.io
+    http:
+      paths:
+      # Default Path(/)
+      - backend:
+          serviceName: springapp
+          servicePort: 80
+      - path: /java-web-app
+        backend:
+          serviceName: javawebapp
+          servicePort: 80
+
+      - path: /maven-web-app
+        backend:
+          serviceName: myappsvc
+          servicePort: 80
+
+      - path: /alert
+        backend:
+          serviceName: prometheus-alertmanager
+          servicePort: 80

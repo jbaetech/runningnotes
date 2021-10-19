@@ -1,0 +1,46 @@
+#!/bin/bash
+# author: Landmark Technology
+# Install AWSCLI
+ sudo apt update -y
+ sudo curl https://s3.amazonaws.com/aws-cli/awscli-bundle.zip -o awscli-bundle.zip
+ sudo apt install unzip python -y
+ sudo unzip awscli-bundle.zip
+ #sudo apt-get install unzip - if you dont have unzip in your system
+ sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+
+# Install Required packages and apt keys.
+apt-get update -y
+apt-get install -y apt-transport-https
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+
+cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+apt-get update -y
+
+#Turn Off Swap Space
+# Enable us to increase our RAM size for better performance
+swapoff -a
+sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+# Install And Enable Docker
+apt install docker.io -y
+usermod -aG docker ubuntu
+systemctl restart docker
+systemctl enable docker.service
+
+
+#Install kubeadm, Kubelet And Kubectl 
+apt-get install -y kubelet kubeadm kubectl kubernetes-cni
+# If you get error releated to kubernetes-cni if alreay exists install with out kubernetes-cni
+apt-get install -y kubelet kubeadm kubectl 
+
+# Enable and start kubelet service
+systemctl daemon-reload 
+systemctl start kubelet 
+
+#join woker node to master
+
+
+kubeadm join 172.31.67.212:6443 --token 4w36fc.gpmf3rxmqaujm0dr \
+    --discovery-token-ca-cert-hash sha256:5a155ced3f60f6c751f41bf386dd0efbb8d1d551a0087993a619442704ad603d

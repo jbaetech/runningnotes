@@ -1,0 +1,132 @@
+# Deploy usermgt springboot application
+# deploy LoadBalancer svc for frontend usergmt app
+# Deploy ClusterIP service for backend mongodb app
+# deploy PVC using EBS-BLOCK-STORE  
+# Deploy mongodb container
+# Deploy ConfigMaps for mongo db
+# Deploy secret to store confidential details (password, tokens & sshkeys)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: usermgt
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: springapp
+  template:
+    metadata:
+      name: springapppod
+      labels:
+        app: springapp
+    spec:
+      containers:
+      - name: springappcontainer
+        image: mylandmarktech/spring-boot-mongo
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MONGO_DB_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-configmap
+              key: db-username
+        - name: MONGO_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-db-password
+              key: db-password
+        - name: MONGO_DB_HOSTNAME
+          value: mongo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: springapp
+spec:
+  selector:
+    app: springapp
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodbpvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: mongodbrs
+spec:
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+     metadata:
+       name: mongodbpod
+       labels:
+         app: mongodb
+     spec:
+       volumes:
+       - name: pvc
+         persistentVolumeClaim:
+           claimName: mongodbpvc
+       containers:
+       - name: mongodbcontainer
+         image: mongo
+         ports:
+         - containerPort: 27017
+         env:
+         - name: MONGO_INITDB_ROOT_USERNAME
+           valueFrom:
+             configMapKeyRef:
+               name: mongo-configmap
+               key: db-username
+         - name: MONGO_INITDB_ROOT_PASSWORD
+           valueFrom:
+             secretKeyRef:
+               name: mongo-db-password
+               key: db-password
+         volumeMounts:
+         - name: pvc
+           mountPath: /data/db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+spec:
+  type: ClusterIP
+  selector:
+    app: mongodb
+  ports:
+  - port: 27017
+    targetPort: 27017
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: mongo-configmap
+data:
+  # Configuration values can be set as key-value properties
+  db-username : devdb
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongo-db-password
+#type: Opaque means that from kubernetes's point of view the contents of this Secret is unstructured.
+#It can contain arbitrary key-value pairs.
+type: Opaque
+data:
+  # Output of "echo -n 'devdb@123' | base64"
+  db-password: ZGV2ZGJAMTIz

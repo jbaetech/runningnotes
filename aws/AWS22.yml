@@ -1,0 +1,425 @@
+
+Infrastructure Managment  :
+  AWS -80/GCP-20, Terraform and Ansible
+  Infrastructure Automation
+  Infrastructure Engineer
+
+  CLI 
+  GUI 
+
+
+Creating custom AMIs for automation
+
+Building and maintaining Complex Automated CI/CD pipelines
+  using multiple interconnected tools.
+      Jenkins  - CI
+        Maven = Validation, Compilation, Testing, Package (jar, war, ear) 
+        SonarQube = code coverage, code smells, bugs, duplicate lines
+        Release  = Upload into Nexus/JFrog
+
+      Jenkins  - CD   
+        Deploying = 
+            ANSIBLE
+              Tomcat/JBoss
+              Docker/K8s 
+
+      JENKINS  - Continuous Monitoring
+
+AMI
+
+DevOps E. Degree Master Class     :
+Class21 = 100%
+  Class22 = 120% Class21
+    Class23 = 140% Class21
+AWS: 
+  Can we have an instance without public IP? 
+  Can we have an instance without public IP? 
+
+EC2:
+    Elastic Compute Cloud
+    Elastic Computer
+     LINUX
+     WINDOWS
+
+  Node Group : k8s
+    AMI  = 
+  
+  IP: 
+    private   = 
+    public    = 
+    Elastic   = 
+
+  ssh -i "k88s.pem" ec2-user@54.193.127.113
+
+  ls -l .ssh 
+
+EBS  = Elastic Block Storage = RW0 :
+  Block storage can't shared data with mulitple servers at once
+  FAST
+  CHEAP
+  DATA Must be mounted 
+  We can't access data without mounting
+  Maximum capacity = 16000GB
+      MC<=16TB
+    Maximum capacity root volume is 1023GB
+  
+   ENCRYPTION  = KMS 
+   
+   uptime  = 2 years 
+
+   data migration  
+      EC2-UBUNTU 18.04 tomcat
+        /dev/xvdf   /home/ubuntu/deploy
+      EC2-UBUNTU 20.04 TOMCAT 
+      REDHAT-7  --> REDHAT-8
+     
+     account1-Dev 
+      AZ1       AZ2 
+
+   zero downtime = 
+
+         JBoss
+
+    EFS / NFS 
+
+  scp -i db.pem 23 ubuntu@13.52.247.129      :/home/ubuntu/deploy
+  
+  ssh-keygen 
+  id_rsa  id_rsa.pub
+
+  RWO = Read-Write-Once 
+    private-key = pem 
+    public key  = 
+
+  use cases:
+    root volume for ec2
+    additional volume mount points to ec2 
+      JENKINS- JHD = /var/lib/Jenkins
+    data-migration and back-up 
+      automated the process using lifecycle
+    To recover private keys 
+   
+    docker and k8s persistent volumes  
+
+   EBS volume concept to recover private key.
+      STOP THE SERVER WITH LOST PRIVATE key AND  = SERVER1
+          DETACH THE ROOT VOLUME 
+      CREATE A RECOVEREY  SERVER WITH NEW KEY PAIR  = SERVER2
+          attach the root volume of server1 to server 2
+      Copy the public (.ssh/authorized_keys) of  server2 into the server1  root volume
+
+      Remount server1 root volume and restart
+
+      connect to the server using key2
+
+  
+  JENKINS = /var/lib/Jenkins
+
+   
+
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-using-volumes.html 
+
+
+EFS / NFS   = File Storage: = RWX
+   Google-DRIVE =  
+   One drive 
+  
+   800GB 
+
+   mylandmarktech@gmail.com
+         Google Drive = 
+  Maximum capacity = 0 <= x > 1GB 
+  READ  = FASTER
+  WRITE = SLOW
+  mounting required
+  Can not be shared/mounted with multiple servers at once
+
+Install NFS/EFS Client:
+   sudo dnf install nfs-utils nfs4-acl-tools
+   sudo apt update && sudo apt install nfs-common
+
+   sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-4b7c9f53.efs.us-west-1.amazonaws.com:/ efs
+
+   hostPath = node 1--17 
+      dbc = node 
+      /data/db = /data  = n5 
+      /data/db = /data  = n11
+   nfs 
+
+S3  = object storage  :
+  Standard
+  RSS
+  Glacier
+  without mounting you can access data
+  each object in S3 will have a unique end point to access
+
+ACCESSING AWS API:
+  GUI - Graphical User Interface AWS Console
+  Console Access :
+        Username
+        Password
+
+ arn:aws:iam::370612984446:user/ken
+
+
+  Programmatic access:
+    cli - Command Line Interface
+    api - application programming Interface
+    SDK = software development kit
+    CDK - cloud development kit
+        https://aws.amazon.com/cdk/
+          Terraform
+          Cloud Formation 
+          kops
+
+
+LoadBalancers
+OSI model -Open Systems Interconnection model:
+Layer 7:  Application Layer
+Layer 6:  Presentation Layer
+Layer 5:  Session Layer
+Layer 4:  Transport Layer
+Layer 3:  Network Layer
+Layer 2:  Data Link Layer
+Layer 1:  Physical Layer 
+
+Layer 3  traffic is
+  Source and destination
+
+Layer 7  traffic is
+  Source to multiple destinations
+
+NGINX INGRESS Layer 7 LoadBalancer K8s
+
+   app.com
+      NLB
+         NGINX
+            host 
+            path 
+              /
+              /sprinapp
+              /mgt 
+
+*Ford Motors* 
+   *DevOps Engineer Position*
+     *Salary upto $275,000/yr* 
+     *Productivity Bonus upto 60% ($165,000/yr)*
+     *12% Stock option* 
+     *sign on bonus*
+     Requirements:
+      *Kubernetes, Docker, AWS, Terraform, Python or Golang* 
+  NB: *Class22/21 Graduates*
+
+Service: 
+  Type: LoadBalancer  = NLB
+
+Stickiness is disabled 
+
+ session
+
+    CAPEX  = Capital Expenditure 
+    OPEX   = Operating Expenditure
+
+ HA 
+ Scalable 
+ Elastic 
+ Resilient 
+ Secured
+
+   A Records 
+   c-name 
+       myapp.landmarkteck.net 
+            myALB-1794690140.ca-central-1.elb.amazonaws.com
+
+
+  vpc  = Creating a network 
+         Resources talk to each other using 
+             IP / Names(hostname)
+             cidr-block  = assign IP 
+               IPV4 OR IPV6 
+              0.0.0.0/16 
+              8+8+8+8 = 32 
+
+         virtual private network:  
+             10.0.0.0/24 = 2^8=256
+           Subneting 
+              HR / Texas   = 4000 (4000 IP) = 
+              Accounting  / Virginia  = 16 ips 
+                   10.0.1.0/27 = 2^5 = 32
+              IT  /   Ohio 
+              Sales 
+          Subnet = 
+              private = db, apps  = MZ  
+                        db = 10.10.10.147 
+              public = webserver, ELB, 
+                       JumpServer, SandBox,  - DMZ  
+              NAT Gateway/instance = 
+
+    Farget = 
+      kubectl apply app.yml = pod(node)(cluster)
+
+         router (route table) from ISP = 
+
+   Route 53 = domain name service = DNS 
+      A Records = Covert IP to hostname 
+                  10.10.25.10 : app.com 
+      C-Name: aliases 
+        myjavaspringbootwebapplication.aws.com : myapp.com 
+ ELB: 
+a09796ac9732d4e2898e7705e0c70595-559640566.us-west-2.elb.amazonaws.com : app.myapp23.com 
+
+  app.com = --> dns-servers(AWS ROUTE 53) --> ELB --> appServers/K8S  
+
+        nslookup app.com 
+
+
+
+
+
+aws ec2 create-vpc --cidr-block 10.10.0.0/20
+
+aws ec2 create-subnet \
+    --vpc-id "vpc-07eecba804f10f2f0" \
+    --cidr-block 10.10.0.0/24 --availability-zone us-west-2a
+
+aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block 10.88.1.0/24 --availability-zone us-east-1f
+
+aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block 10.88.2.0/24 --availability-zone us-east-1e
+
+aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block 10.88.3.0/24 --availability-zone us-east-1f
+
+aws ec2 create-internet-gateway
+
+aws ec2 attach-internet-gateway --vpc-id $VPC_ID --internet-gateway-id $IGW
+
+aws ec2 create-route-table --vpc-id $VPC_ID
+
+aws ec2 create-route --route-table-id $RTB --destination-cidr-block 0.0.0.0/0 --gateway-id $IGW
+
+aws ec2 allocate-address --domain vpc
+
+aws ec2 create-nat-gateway --subnet-id $PUBLIC_SUBNET --allocation-id $EIP
+
+aws ec2 create-route-table --vpc-id $VPC_ID
+
+aws ec2 create-route --route-table-id $RTB_PRIVATE --destination-cidr-block 0.0.0.0/0 --gateway-id $NGW
+
+aws ec2 associate-route-table --subnet-id $PUBLIC_SUBNET0 --route-table-id $RTB_PUB
+
+aws ec2 associate-route-table --subnet-id $PUBLIC_SUBNET1 --route-table-id $RTB_PUB
+
+aws ec2 associate-route-table --subnet-id $PRIVATE_SUBNET2 --route-table-id $RTB_PRIV
+
+aws ec2 associate-route-table --subnet-id $PRIVATE_SUBNET3 --route-table-id $RTB_PRIV
+
+SDK
+
+
+
+THU 8PM
+SAT 8AM
+MON 7PM
+
+#!/bin/bash
+yum install httpd -y 
+ service httpd start  
+ chkconfig httpd on
+echo "This is my web server" > /var/www/html/index.html  
+echo successful
+
+
+myLandmarkTech: 
+  FinTech = BA, RBC, TD
+    300 members
+
+ 
+
+ IAM  = Identity and ACCESS Managment
+
+  Policies  --> Are Specific Permissions that can be attached to AWS resources - ec2 
+      VPCReadAccess =  EC2FullAccess
+  Roles  --> Policies are attach to aws resources 
+            ec2 for it to manage other resources
+            admin - Everything in the aws account  
+  Users  --> Group members sharing policies
+  Groups  --> Policies are attached to groups. 
+        DevOps Engineers = 
+           VPCFullAccess
+        Developers
+           VPCReadAccess
+        SRE
+        Systems Admins  
+        Testers 
+              Users in such group inherit those policies
+
+Identity FEDERATION: 
+  Indentiy Providers (LDAP, OpenID Connect, SSO)
+    LDAP Server:
+   sn    Employees   Groups      Username  Password 
+    1    Eric        Developer    eric      *******
+
+    2    Tifuh        SRE         tifuh     0000000
+    100
+
+  JumpServer = it is use to login to our server resources
+               It provide a layer of security 
+
+  SandBox    = It is a testing environment/server 
+               user.sh 
+               This script will create users in REDHAT-8 
+
+  
+
+ Enables an access key ID and secret access key for the AWS API, CLI, SDK,
+ and other development tools.
+
+ Username: class23 
+ userID:  267477895127
+  https://267477895127.signin.aws.amazon.com/console
+ Password: Admin2045 
+ Programatic access: 
+  CLI = AWSCLI = aws 
+  SDK 
+ aws s3 ls 
+  Unable to locate credentials. 
+  You can configure credentials by running "aws configure". :
+ access key: AKIAT4RXMY7L2GY4FWWL
+ secret key: 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
+
+$ aws configure
+AWS Access Key ID [None]: AKIAT4RXMY7L2GY4FWWL
+AWS Secret Access Key [None]: 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
+Default region name [None]: us-west-2
+Default output format [None]: 
+
+aws s3 ls    :
+aws s3 mb s3:/class23abc   :
+   api 
+
+Infrastructure automation:
+  Infrastructure as a Code;
+    Terraform;
+      terraform init 
+      terraform  plan 
+        [init, validate, plan, apply, show, destroy]
+
+       Terraform_scripts 
+       main.tf 
+    Ansible
+    kops
+      kops create cluster $NAME 
+        vpc, ASG, NodeGroups, LC, LB, EBS, k8s
+    git gitHub
+    CoudFormation
+      JSon
+      YML
+     CDK 
+    Kubernetes
+      Reusable manifests
+      helm
+    Python:
+      django 
+
+Console or CLI we can SDKs
+
+aws allocate-address
